@@ -1,0 +1,28 @@
+{
+  "name": "RestStop",
+  "version": "0.1.0",
+  "summary": "An API connector to simplify cross-platform API integration",
+  "description": "An API connector to simplify cross-platform API integration.",
+  "homepage": "https://mobyinc.com",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "mobyjames": "james@mobyinc.com"
+  },
+  "source": {
+    "git": "https://github.com/mobyinc/RestStop.git",
+    "tag": "0.1.0"
+  },
+  "platforms": {
+    "ios": "10.0"
+  },
+  "source_files": "RestStop/Classes/**/*",
+  "swift_version": "4.0",
+  "dependencies": {
+    "RxSwift": [
+      "~> 4.1.1"
+    ]
+  }
+}

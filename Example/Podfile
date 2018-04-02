@@ -1,0 +1,12 @@
+platform :ios, '10.0'
+
+use_frameworks!
+
+pod 'RxSwift',   '~> 4.0'
+
+target 'RestStop_Tests' do
+  pod 'RestStop', path: '../'
+
+  pod 'RxBlocking', '~> 4.0'
+  pod 'RxTest',     '~> 4.0'
+end

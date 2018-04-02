@@ -1,0 +1,6 @@
+framework module RestStop {
+  umbrella header "RestStop-umbrella.h"
+
+  export *
+  module * { export * }
+}
