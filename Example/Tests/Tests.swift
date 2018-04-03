@@ -1,21 +1,27 @@
 import XCTest
 import RestStop
+import RxSwift
+import RxBlocking
 
 class Tests: XCTestCase {
+    static var store: Store?
     
-    override func setUp() {
+    override class func setUp() {
         super.setUp()
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        
+        let client = DefaultJsonClient();
+        let adapter = INaturalistRestAdapter(baseUrlString: "https://api.inaturalist.org/v1/", httpClient: client);
+        self.store = Store(adapter: adapter);
     }
     
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    override class func tearDown() {
         super.tearDown()
+        self.store = nil
     }
     
-    func testExample() {
-        // This is an example of a functional test case.
-        XCTAssert(true, "Pass")
+    func testGet() {
+        let result = try! Tests.store!.resource(name: "observations").getList().toBlocking().first()!
+        XCTAssert(result.total > 0)
     }
     
     func testPerformanceExample() {
@@ -26,3 +32,8 @@ class Tests: XCTestCase {
     }
     
 }
+
+class INaturalistRestAdapter : DefaultRestAdapter {
+    
+}
+

@@ -9,6 +9,6 @@
 import Foundation
 import RxSwift
 
-protocol HttpClientProtocol {
-    func get(url: String) -> Single<Any?>
+public protocol HttpClientProtocol {
+    func get(url: URL) -> Observable<Any>
 }

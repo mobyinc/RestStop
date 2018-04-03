@@ -9,7 +9,7 @@
 import Foundation
 import RxSwift
 
-class Resource {
+public class Resource {
     var name: String
     var adapter: RestAdaptable
     
@@ -18,7 +18,7 @@ class Resource {
         self.name = name
     }
     
-    public func getOne(id: String) -> Observable<Any?> {
-        return self.adapter.getOne(resourceName: self.name, id: id)
+    public func getList() -> Observable<Result> {
+        return self.adapter.getList(resourceName: name, pagination: nil, filters: nil)
     }
 }

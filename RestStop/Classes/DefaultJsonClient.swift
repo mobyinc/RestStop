@@ -9,22 +9,24 @@
 import Foundation
 import RxSwift
 
-class DefaultJsonClient : HttpClientProtocol {
-    public func get(url: String) -> Single<Any?> {
-        return Single<Any?>.create { single in
-            let task = URLSession.shared.dataTask(with: URL(string: url)!) { data, _, error in
+open class DefaultJsonClient : HttpClientProtocol {
+    public init() { }
+
+    public func get(url: URL) -> Observable<Any> {
+        return Observable<Any>.create { observer in
+            let task = URLSession.shared.dataTask(with: url) { data, response, error in
                 if let error = error {
-                    single(.error(error))
+                    observer.onError(error)
                     return
                 }
                 
                 guard let data = data,
                     let json = try? JSONSerialization.jsonObject(with: data, options: .mutableLeaves) else {
-                        single(.error(RestError.cantParseJSON))
+                        observer.onError(RestError.cantParseJSON)
                         return
                 }
                 
-                single(.success(json))
+                observer.onNext(json)
             }
             
             task.resume()
@@ -33,3 +35,5 @@ class DefaultJsonClient : HttpClientProtocol {
         }
     }
 }
+
+

@@ -8,10 +8,10 @@
 
 import Foundation
 
-class Store {
+public class Store {
     var adapter: RestAdaptable
-    
-    init(adapter: RestAdaptable) {
+
+    public init(adapter: RestAdaptable) {
         self.adapter = adapter;
     }
     
