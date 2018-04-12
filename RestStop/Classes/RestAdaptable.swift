@@ -16,6 +16,7 @@ public enum SortDirection: String {
 
 public enum RestError: Error {
     case cantParseJSON
+    case noData
 }
 
 public struct Pagination {
@@ -32,6 +33,6 @@ public struct Filter {
 }
 
 public protocol RestAdaptable {
-    func getList(resourceName: String, pagination: Pagination?, filters: Filter?) -> Observable<Result>
-//    func getOne(resourceName: String, id: String) -> Single<Result>
+    func getList<T: Codable>(resourceName: String, pagination: Pagination?, filters: Filter?) -> Single<Result<T>>
+    func getOne<T: Codable>(resourceName: String, id: String) -> Single<T?>
 }

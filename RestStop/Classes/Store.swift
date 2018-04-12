@@ -9,13 +9,23 @@
 import Foundation
 
 public class Store {
+    static var sharedInstance: Store?
+
+    public static var shared: Store! {
+        return Store.sharedInstance!
+    }
+    
     var adapter: RestAdaptable
 
     public init(adapter: RestAdaptable) {
         self.adapter = adapter;
+        
+        if Store.sharedInstance == nil {
+            Store.sharedInstance = self
+        }
     }
     
-    public func resource(name: String) -> Resource {
-        return Resource(adapter: self.adapter, name: name);
+    public func resource<T: Codable>(name: String, type: T.Type) -> Resource<T> {
+        return Resource<T>(adapter: self.adapter, name: name);
     }
 }

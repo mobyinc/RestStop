@@ -9,7 +9,7 @@
 import Foundation
 import RxSwift
 
-public class Resource {
+public class Resource<T: Codable> {
     var name: String
     var adapter: RestAdaptable
     
@@ -18,7 +18,11 @@ public class Resource {
         self.name = name
     }
     
-    public func getList() -> Observable<Result> {
+    public func getList() -> Single<Result<T>> {
         return self.adapter.getList(resourceName: name, pagination: nil, filters: nil)
+    }
+    
+    public func getOne(id: String) -> Single<T?> {
+        return self.adapter.getOne(resourceName: name, id: id)
     }
 }

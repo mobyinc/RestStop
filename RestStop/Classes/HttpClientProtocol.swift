@@ -10,5 +10,5 @@ import Foundation
 import RxSwift
 
 public protocol HttpClientProtocol {
-    func get(url: URL) -> Observable<Any>
+    func get(url: URL) -> Observable<Data>
 }
