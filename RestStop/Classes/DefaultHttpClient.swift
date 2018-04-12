@@ -12,9 +12,9 @@ import RxSwift
 open class DefaultHttpClient : HttpClientProtocol {
     public init() { }
 
-    public func get(url: URL) -> Observable<Data> {
+    public func send(request: URLRequest) -> Observable<Data> {
         return Observable<Data>.create { observer in
-            let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
                 if let error = error {
                     observer.onError(error)
                     return

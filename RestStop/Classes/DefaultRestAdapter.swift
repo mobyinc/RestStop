@@ -15,23 +15,64 @@ public struct GetResponse<T: Codable>: Codable {
     public var results: Array<T>
 }
 
+public struct AuthResponse: Codable {
+    public var access_token: String
+    public var token_type: String
+    public var expires_in: String
+    public var refresh_token: String
+    public var scope: String
+}
+
 open class DefaultRestAdapter : RestAdaptable {
     public private(set) var baseUrl: URL
     public private(set) var client: HttpClientProtocol
+    public private(set) var token: String?
     
     public init(baseUrlString: String, httpClient: HttpClientProtocol) {
         self.baseUrl = URL(string: baseUrlString)!
         self.client = httpClient
     }
 
+    open func authenticate(username: String, password: String) -> Single<AuthResponse?> {
+        guard let url = self.urlForAuthentication() else {
+            return Observable.of(nil).asSingle();
+        }
+        
+        let payload = self.encodeAuthentication(username: username, password: password)
+        
+        guard let request = self.postRequestForUrl(url: url, parameters: payload) else {
+            return Observable.of(nil).asSingle();
+        }
+        
+        return self.client.send(request: request)
+            .map(decodeAuthorization)
+            .asSingle();
+    }
+
     open func getList<T: Codable>(resourceName: String, pagination: Pagination?, filters: Filter?) -> Single<Result<T>> {
         let url = self.urlForResource(resourceName: resourceName)
-        return self.client.get(url: url!).map(decodeList).asSingle()
+        let request = self.requestForUrl(url: url!)
+        return self.client.send(request: request).map(decodeList).asSingle()
     }
     
     open func getOne<T: Codable>(resourceName: String, id: String) -> Single<T?> {
         let url = self.urlForResource(resourceName: resourceName, id: id, action: nil)
-        return self.client.get(url: url!).map(decodeOne).asSingle()
+        let request = self.requestForUrl(url: url!)
+        return self.client.send(request: request).map(decodeOne).asSingle()
+    }
+    
+    open func encodeAuthentication(username: String, password: String) -> Dictionary<String, Any> {
+        return [
+            "username": username,
+            "password": password,
+            "grant_type": "password",
+            "client_id": "test",
+            "client_secret": "test"
+        ]
+    }
+    
+    open func decodeAuthorization(data: Data) -> AuthResponse? {
+        return try? JSONDecoder().decode(AuthResponse.self, from: data)
     }
     
     open func decodeList<T: Codable>(data: Data) -> Result<T> {
@@ -49,6 +90,10 @@ open class DefaultRestAdapter : RestAdaptable {
         } catch {
             return nil
         }
+    }
+    
+    open func urlForAuthentication() -> URL? {
+        return URL(string: "oauth/authorize", relativeTo: self.baseUrl)
     }
     
     open func urlForResource(resourceName: String) -> URL? {
@@ -71,5 +116,38 @@ open class DefaultRestAdapter : RestAdaptable {
         }
         
         return path
+    }
+    
+    open func postRequestForUrl(url: URL, parameters: Dictionary<String, Any>) -> URLRequest? {
+        var request = self.requestForUrl(url: url)
+        
+        do {
+            let json = try JSONSerialization.data(withJSONObject: parameters, options: [])
+            
+            request.httpMethod = "POST"
+            request.httpBody = json
+            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.addValue("application/json", forHTTPHeaderField: "Accept")
+        } catch {
+            return nil
+        }
+        
+        return request
+    }
+    
+    open func requestForUrl(url: URL) -> URLRequest {
+       var request = URLRequest(url: url)
+       self.authorizeRequest(request: &request)
+       return request
+    }
+    
+    open func setToken(token: String) {
+        self.token = token
+    }
+    
+    open func authorizeRequest(request: inout URLRequest) {
+        if let token = self.token {
+            request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
     }
 }

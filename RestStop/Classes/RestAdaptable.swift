@@ -33,6 +33,8 @@ public struct Filter {
 }
 
 public protocol RestAdaptable {
+    func authenticate(username: String, password: String) -> Single<AuthResponse?>
+    func setToken(token: String)
     func getList<T: Codable>(resourceName: String, pagination: Pagination?, filters: Filter?) -> Single<Result<T>>
     func getOne<T: Codable>(resourceName: String, id: String) -> Single<T?>
 }

@@ -17,7 +17,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         let client = DefaultHttpClient()
         let adapater = INatRestAdapater(baseUrlString: "https://api.inaturalist.org/v1/", httpClient: client)
-        _ = Store(adapter: adapater)
+        let store = Store(adapter: adapater)
+        
+        if store.restoreSession() {
+            // Do something else
+        }
         
         return true
     }
