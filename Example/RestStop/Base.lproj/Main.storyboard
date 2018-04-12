@@ -6,6 +6,7 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -52,12 +53,55 @@
                     <view key="view" contentMode="scaleToFill" id="vSM-EJ-jYe">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="57P-Oa-7TX">
+                                <rect key="frame" x="16" y="94" width="343" height="25"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="25" id="cKA-C3-e55"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Count" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GjY-yK-v2a">
+                                <rect key="frame" x="16" y="127" width="343" height="25"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="25" id="tAM-KH-OsT"/>
+                                    <constraint firstAttribute="height" constant="25" id="xAN-6d-58x"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="2Mg-IP-leR">
+                                <rect key="frame" x="16" y="160" width="343" height="200"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="200" id="fo2-Wn-oKe"/>
+                                </constraints>
+                            </imageView>
+                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="2Mg-IP-leR" firstAttribute="trailing" secondItem="vSM-EJ-jYe" secondAttribute="trailingMargin" id="7ww-aS-FXN"/>
+                            <constraint firstItem="57P-Oa-7TX" firstAttribute="trailing" secondItem="vSM-EJ-jYe" secondAttribute="trailingMargin" id="ASF-Ij-O5K"/>
+                            <constraint firstItem="57P-Oa-7TX" firstAttribute="top" secondItem="qwY-cu-Fe9" secondAttribute="bottom" constant="30" id="ViR-sY-8Z7"/>
+                            <constraint firstItem="GjY-yK-v2a" firstAttribute="top" secondItem="57P-Oa-7TX" secondAttribute="bottom" constant="8" id="X9w-Vo-o3C"/>
+                            <constraint firstItem="2Mg-IP-leR" firstAttribute="top" secondItem="GjY-yK-v2a" secondAttribute="bottom" constant="8" id="jCH-Er-Lkp"/>
+                            <constraint firstItem="57P-Oa-7TX" firstAttribute="leading" secondItem="vSM-EJ-jYe" secondAttribute="leadingMargin" id="lUv-pU-wmX"/>
+                            <constraint firstItem="2Mg-IP-leR" firstAttribute="leading" secondItem="vSM-EJ-jYe" secondAttribute="leadingMargin" id="m4g-Ni-NMH"/>
+                            <constraint firstItem="GjY-yK-v2a" firstAttribute="trailing" secondItem="vSM-EJ-jYe" secondAttribute="trailingMargin" id="rkm-de-OAx"/>
+                            <constraint firstItem="GjY-yK-v2a" firstAttribute="leading" secondItem="vSM-EJ-jYe" secondAttribute="leadingMargin" id="wv5-qw-Ztb"/>
+                        </constraints>
                     </view>
+                    <connections>
+                        <outlet property="countLabel" destination="GjY-yK-v2a" id="uA1-6b-lhL"/>
+                        <outlet property="image" destination="2Mg-IP-leR" id="23W-Xh-2IF"/>
+                        <outlet property="nameLabel" destination="57P-Oa-7TX" id="2mY-z5-h9H"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="yad-vB-8cB" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1110" y="176"/>
+            <point key="canvasLocation" x="1109.5999999999999" y="175.86206896551727"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="OH4-6W-DcU">
