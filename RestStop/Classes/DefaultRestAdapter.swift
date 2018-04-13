@@ -16,6 +16,15 @@ public struct GetResponse<T: Codable>: Codable {
 }
 
 public struct AuthResponse: Codable {
+    
+    public init(access_token: String, token_type: String, expires_in: String, refresh_token: String, scope: String) {
+        self.access_token = access_token
+        self.token_type = token_type
+        self.expires_in = expires_in
+        self.refresh_token = refresh_token
+        self.scope = scope
+    }
+    
     public var access_token: String
     public var token_type: String
     public var expires_in: String
@@ -45,7 +54,7 @@ open class DefaultRestAdapter : RestAdaptable {
         }
         
         return self.client.send(request: request)
-            .map(decodeAuthorization)
+            .map(decodeAuthentication)
             .asSingle();
     }
 
@@ -71,7 +80,7 @@ open class DefaultRestAdapter : RestAdaptable {
         ]
     }
     
-    open func decodeAuthorization(data: Data) -> AuthResponse? {
+    open func decodeAuthentication(data: Data) -> AuthResponse? {
         return try? JSONDecoder().decode(AuthResponse.self, from: data)
     }
     

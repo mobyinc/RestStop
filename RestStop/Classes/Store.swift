@@ -11,6 +11,9 @@ import RxSwift
 
 public class Store {
     static var sharedInstance: Store?
+    
+    let encoder = JSONEncoder()
+    let decoder = JSONDecoder()
 
     public static var shared: Store! {
         return Store.sharedInstance!
@@ -33,18 +36,24 @@ public class Store {
                     return false
                 }
                 
-                UserDefaults.standard.set(response, forKey: "SESSION")
-                
-                self.adapter.setToken(token: response.access_token)
-                
-                return true
+                if let encoded = try? self.encoder.encode(response) {
+                    UserDefaults.standard.set(encoded, forKey: "SESSION")
+                    self.adapter.setToken(token: response.access_token)
+                    return true
+                } else {
+                    return false
+                }
             }
     }
     
     public func restoreSession() -> Bool {
-        if let session = UserDefaults.standard.object(forKey: "SESSION") as? AuthResponse {
-            self.adapter.setToken(token: session.access_token)
-            return true
+        if let session = UserDefaults.standard.data(forKey: "SESSION") {
+            if let decoded = try? self.decoder.decode(AuthResponse.self, from: session) {
+                self.adapter.setToken(token: decoded.access_token)
+                return true
+            } else {
+                return false
+            }
         } else {
             return false
         }
