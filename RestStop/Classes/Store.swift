@@ -59,7 +59,7 @@ public class Store {
         }
     }
     
-    public func refreshSession() {
+    public func refreshSession(withRefreshToken: Bool) {
         // TODO
     }
     

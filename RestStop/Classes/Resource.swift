@@ -18,7 +18,19 @@ public class Resource<T: Codable> {
         self.name = name
     }
     
+    public func task(name: String) -> Resource<T> {
+        return Resource<T>(adapter: self.adapter, name: "\(self.name)/\(name)")
+    }
+    
     public func getList() -> Single<Result<T>> {
+        return self.getList(pagination: nil, filters: nil)
+    }
+    
+    public func getList(pagination: Pagination?) -> Single<Result<T>> {
+        return self.getList(pagination: pagination, filters: nil)
+    }
+    
+    public func getList(pagination: Pagination?, filters: Filter?) -> Single<Result<T>> {
         return self.adapter.getList(resourceName: name, pagination: nil, filters: nil)
     }
     
