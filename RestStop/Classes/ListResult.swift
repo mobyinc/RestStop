@@ -1,6 +1,7 @@
 //
 //  Result.swift
 //  RestStop
+//  The metadata and item results from a list request.
 //
 //  Created by James Jacoby on 4/2/18.
 //
@@ -8,7 +9,7 @@
 import Foundation
 import RxSwift
 
-public struct Result<T:Codable> {
+public struct ListResult<T: Codable> {
     public var total: Int
     public var page: Int
     public var perPage: Int

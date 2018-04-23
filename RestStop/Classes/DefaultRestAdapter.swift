@@ -1,36 +1,14 @@
 //
 //  DefaultRestAdapter.swift
 //  RestStop
+//  A default implementation of RestAdaptable to be used as a starting point for project adapters.
+//  It is unlikley that any real API maps to this adapater out of the box.
 //
 //  Created by James Jacoby on 4/2/18.
 //
 
 import Foundation
 import RxSwift
-
-public struct GetResponse<T: Codable>: Codable {
-    public var total_results: Int
-    public var page: Int
-    public var per_page: Int
-    public var results: Array<T>
-}
-
-public struct AuthResponse: Codable {
-    
-    public init(access_token: String, token_type: String, expires_in: String, refresh_token: String, scope: String) {
-        self.access_token = access_token
-        self.token_type = token_type
-        self.expires_in = expires_in
-        self.refresh_token = refresh_token
-        self.scope = scope
-    }
-    
-    public var access_token: String
-    public var token_type: String
-    public var expires_in: String
-    public var refresh_token: String
-    public var scope: String
-}
 
 open class DefaultRestAdapter : RestAdaptable {
     public private(set) var baseUrl: URL
@@ -58,7 +36,7 @@ open class DefaultRestAdapter : RestAdaptable {
             .asSingle();
     }
 
-    open func getList<T: Codable>(resourceName: String, pagination: Pagination?, filters: Filter?) -> Single<Result<T>> {
+    open func getList<T: Codable>(resourceName: String, pagination: Pagination?, filters: Filter?) -> Single<ListResult<T>> {
         let url = self.urlForResource(resourceName: resourceName)
         let request = self.requestForUrl(url: url!)
         return self.client.send(request: request).map(decodeList).asSingle()
@@ -68,6 +46,12 @@ open class DefaultRestAdapter : RestAdaptable {
         let url = self.urlForResource(resourceName: resourceName, id: id, action: nil)
         let request = self.requestForUrl(url: url!)
         return self.client.send(request: request).map(decodeOne).asSingle()
+    }
+    
+    open func remove(resourceName: String, id: String) -> Single<Bool> {
+        let url = self.urlForResource(resourceName: resourceName, id: id, action: nil)
+        let request = self.requestForUrl(url: url!, method: "DELETE")
+        return self.client.send(request: request).map(decodeRemove).asSingle()
     }
     
     open func encodeAuthentication(username: String, password: String) -> Dictionary<String, Any> {
@@ -84,12 +68,12 @@ open class DefaultRestAdapter : RestAdaptable {
         return try? JSONDecoder().decode(AuthResponse.self, from: data)
     }
     
-    open func decodeList<T: Codable>(data: Data) -> Result<T> {
+    open func decodeList<T: Codable>(data: Data) -> ListResult<T> {
         do {
-            let response = try JSONDecoder().decode(GetResponse<T>.self, from: data)
-            return Result<T>(total: response.total_results, page: response.page, perPage: response.per_page, items: response.results)
+            let response = try JSONDecoder().decode(GetListResponse<T>.self, from: data)
+            return ListResult<T>(total: response.total_results, page: response.page, perPage: response.per_page, items: response.results)
         } catch {
-            return Result<T>(total: 0, page: 0, perPage: 0, items: [])
+            return ListResult<T>(total: 0, page: 0, perPage: 0, items: [])
         }
     }
     
@@ -99,6 +83,10 @@ open class DefaultRestAdapter : RestAdaptable {
         } catch {
             return nil
         }
+    }
+    
+    open func decodeRemove(data: Data) -> Bool {
+        return true // non-error response is succcess
     }
     
     open func urlForAuthentication() -> URL? {
@@ -128,12 +116,11 @@ open class DefaultRestAdapter : RestAdaptable {
     }
     
     open func postRequestForUrl(url: URL, parameters: Dictionary<String, Any>) -> URLRequest? {
-        var request = self.requestForUrl(url: url)
+        var request = self.requestForUrl(url: url, method: "POST")
         
         do {
             let json = try JSONSerialization.data(withJSONObject: parameters, options: [])
             
-            request.httpMethod = "POST"
             request.httpBody = json
             request.addValue("application/json", forHTTPHeaderField: "Content-Type")
             request.addValue("application/json", forHTTPHeaderField: "Accept")
@@ -144,10 +131,11 @@ open class DefaultRestAdapter : RestAdaptable {
         return request
     }
     
-    open func requestForUrl(url: URL) -> URLRequest {
-       var request = URLRequest(url: url)
-       self.authorizeRequest(request: &request)
-       return request
+    open func requestForUrl(url: URL, method: String = "GET") -> URLRequest {
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        self.authorizeRequest(request: &request)
+        return request
     }
     
     open func setToken(token: String) {

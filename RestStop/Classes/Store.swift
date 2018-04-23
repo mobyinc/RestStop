@@ -1,6 +1,7 @@
 //
 //  Store.swift
 //  RestStop
+//  The base object used to retrieve resources and manipulate a user session
 //
 //  Created by James Jacoby on 4/1/18.
 //  Copyright © 2018 Moby, Inc. All rights reserved.

@@ -1,6 +1,7 @@
 //
 //  DefaultJsonClient.swift
 //  RestStop
+//  A defaut implementation of HTTPClientProtocol using the shared URLSession
 //
 //  Created by James Jacoby on 4/1/18.
 //  Copyright © 2018 Moby, Inc. All rights reserved.
