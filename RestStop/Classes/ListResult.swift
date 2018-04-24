@@ -9,7 +9,7 @@
 import Foundation
 import RxSwift
 
-public struct ListResult<T: Codable> {
+public struct ListResult<T: Codable & Identifiable> {
     public var total: Int
     public var page: Int
     public var perPage: Int

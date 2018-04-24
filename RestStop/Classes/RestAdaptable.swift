@@ -61,7 +61,8 @@ public struct AuthResponse: Codable {
 public protocol RestAdaptable {
     func authenticate(username: String, password: String) -> Single<AuthResponse?>
     func setToken(token: String)
-    func getList<T: Codable>(resourceName: String, pagination: Pagination?, filters: Filter?) -> Single<ListResult<T>>
-    func getOne<T: Codable>(resourceName: String, id: String) -> Single<T?>
+    func getList<T: Codable & Identifiable>(resourceName: String, pagination: Pagination?, filters: Filter?) -> Single<ListResult<T>>
+    func getOne<T: Codable & Identifiable>(resourceName: String, id: String) -> Single<T?>
+    func save<T: Codable & Identifiable>(resourceName: String, item: T) -> Single<T?>
     func remove(resourceName: String, id: String) -> Single<Bool>
 }

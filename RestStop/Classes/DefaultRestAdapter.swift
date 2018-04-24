@@ -48,6 +48,18 @@ open class DefaultRestAdapter : RestAdaptable {
         return self.client.send(request: request).map(decodeOne).asSingle()
     }
     
+    open func save<T: Codable & Identifiable>(resourceName: String, item: T) -> Single<T?> {
+        if let id = item.id {
+            let url = self.urlForResource(resourceName: resourceName, id: id, action: nil)
+            let request = self.requestForUrl(url: url!, method: "PUT")
+            return self.client.send(request: request).map(decodeOne).asSingle()
+        } else {
+            let url = self.urlForResource(resourceName: resourceName, id: nil, action: nil)
+            let request = self.requestForUrl(url: url!, method: "POST")
+            return self.client.send(request: request).map(decodeOne).asSingle()
+        }
+    }
+    
     open func remove(resourceName: String, id: String) -> Single<Bool> {
         let url = self.urlForResource(resourceName: resourceName, id: id, action: nil)
         let request = self.requestForUrl(url: url!, method: "DELETE")

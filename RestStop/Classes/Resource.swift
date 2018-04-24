@@ -10,7 +10,7 @@
 import Foundation
 import RxSwift
 
-public class Resource<T: Codable> {
+public class Resource<T: Codable & Identifiable> {
     var name: String
     var adapter: RestAdaptable
     
@@ -37,6 +37,10 @@ public class Resource<T: Codable> {
     
     public func getOne(id: String) -> Single<T?> {
         return self.adapter.getOne(resourceName: name, id: id)
+    }
+    
+    public func save(item: T) -> Single<T?> {
+        return self.adapter.save(resourceName: name, item: item)
     }
     
     public func remove(id: String) ->Single<Bool> {

@@ -30,7 +30,7 @@ public class Store {
         }
     }
     
-    public func startSession(username: String, password: String, clientId: String, clientSecret: String) -> Single<Bool> {
+    public func startSession(username: String, password: String) -> Single<Bool> {
         return self.adapter.authenticate(username: username, password: password)
             .map { response in
                 guard let response = response else {
@@ -68,7 +68,7 @@ public class Store {
         UserDefaults.standard.removeObject(forKey: "SESSION")
     }
     
-    public func resource<T: Codable>(name: String, type: T.Type) -> Resource<T> {
+    public func resource<T: Codable & Identifiable>(name: String, type: T.Type) -> Resource<T> {
         return Resource<T>(adapter: self.adapter, name: name);
     }
 }
