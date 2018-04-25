@@ -74,7 +74,8 @@ open class DefaultRestAdapter : RestAdaptable {
     
     open func post<T: Codable, J: Codable>(resourceName: String, item: T, type: J.Type) -> Single<J?> {
         let url = self.urlForResource(resourceName: resourceName)
-        let request = self.requestForUrl(url: url!, method: "POST")
+        var request = self.requestForUrl(url: url!, method: "POST")
+        request.httpBody = try? JSONEncoder().encode(item)
         return self.client.send(request: request).map(interpretResponse).map { data in
             do {
                 return try JSONDecoder().decode(J.self, from: data)

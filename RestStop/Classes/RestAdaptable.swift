@@ -56,7 +56,13 @@ public struct AuthResponse: Codable {
 public struct ErrorResponse: Codable {
     public var code: Int
     public var message: String
-    public var errors: [String:String]
+    public var errors: [String]
+    
+    public init(code: Int, message: String, errors: [String]) {
+        self.code = code
+        self.message = message
+        self.errors = errors
+    }
 }
 
 public enum RestError: Error {
