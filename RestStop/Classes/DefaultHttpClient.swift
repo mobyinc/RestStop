@@ -13,20 +13,30 @@ import RxSwift
 open class DefaultHttpClient : HttpClientProtocol {
     public init() { }
 
-    public func send(request: URLRequest) -> Observable<Data> {
-        return Observable<Data>.create { observer in
+    public func send(request: URLRequest) -> Observable<HttpResponse> {
+        return Observable<HttpResponse>.create { observer in
             let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                if let error = error {
-                    observer.onError(error)
-                    return
+                let status = (response as! HTTPURLResponse).statusCode
+                var resp = HttpResponse(code: status, data: data, error: nil)
+                
+                if error != nil {
+                    resp.error = HttpError.connectionFailed
+                    resp.internalError = error
+                } else if data == nil {
+                    resp.error = HttpError.noData
+                } else if status < 200 || status >= 300  {
+                    switch status {
+                    case 400:
+                        resp.error = HttpError.badRequest
+                    case 401:
+                        resp.error = HttpError.unauthorized
+                    default:
+                        resp.error = HttpError.unknown
+                    }
                 }
                 
-                if let data = data {
-                    observer.onNext(data)
-                    observer.onCompleted()
-                } else {
-                    observer.onError(RestError.noData)
-                }
+                observer.onNext(resp)
+                observer.onCompleted()
             }
             
             task.resume()

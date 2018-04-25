@@ -39,7 +39,7 @@ public class Store {
                 
                 if let encoded = try? self.encoder.encode(response) {
                     UserDefaults.standard.set(encoded, forKey: "SESSION")
-                    self.adapter.setToken(token: response.access_token)
+                    self.adapter.setAuthorization(auth: response)
                     return true
                 } else {
                     return false
@@ -50,7 +50,7 @@ public class Store {
     public func restoreSession() -> Bool {
         if let session = UserDefaults.standard.data(forKey: "SESSION") {
             if let decoded = try? self.decoder.decode(AuthResponse.self, from: session) {
-                self.adapter.setToken(token: decoded.access_token)
+                self.adapter.setAuthorization(auth: decoded)
                 return true
             } else {
                 return false

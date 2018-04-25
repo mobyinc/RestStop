@@ -16,11 +16,6 @@ public enum SortDirection: String {
     case decending = "desc"
 }
 
-public enum RestError: Error {
-    case cantParseJSON
-    case noData
-}
-
 public struct Pagination {
     public var page: Int
     public var perPage: Int
@@ -58,11 +53,25 @@ public struct AuthResponse: Codable {
     public var scope: String
 }
 
+public struct ErrorResponse: Codable {
+    public var code: Int
+    public var message: String
+    public var errors: [String:String]
+}
+
+public enum RestError: Error {
+    case protocolFailure
+    case unauthorized(ErrorResponse?)
+    case badRequest(ErrorResponse?)
+    case unknown(ErrorResponse?)
+}
+
 public protocol RestAdaptable {
     func authenticate(username: String, password: String) -> Single<AuthResponse?>
-    func setToken(token: String)
+    func setAuthorization(auth: AuthResponse)
     func getList<T: Codable & Identifiable>(resourceName: String, pagination: Pagination?, filters: Filter?) -> Single<ListResult<T>>
     func getOne<T: Codable & Identifiable>(resourceName: String, id: String) -> Single<T?>
     func save<T: Codable & Identifiable>(resourceName: String, item: T) -> Single<T?>
+    func post<T: Codable, J: Codable>(resourceName: String, item: T, type: J.Type) -> Single<J?>
     func remove(resourceName: String, id: String) -> Single<Bool>
 }

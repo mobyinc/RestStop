@@ -13,7 +13,7 @@ import RxSwift
 open class DefaultRestAdapter : RestAdaptable {
     public private(set) var baseUrl: URL
     public private(set) var client: HttpClientProtocol
-    public private(set) var token: String?
+    public var token: String?
     
     public init(baseUrlString: String, httpClient: HttpClientProtocol) {
         self.baseUrl = URL(string: baseUrlString)!
@@ -32,6 +32,7 @@ open class DefaultRestAdapter : RestAdaptable {
         }
         
         return self.client.send(request: request)
+            .map(interpretResponse)
             .map(decodeAuthentication)
             .asSingle();
     }
@@ -39,31 +40,55 @@ open class DefaultRestAdapter : RestAdaptable {
     open func getList<T: Codable>(resourceName: String, pagination: Pagination?, filters: Filter?) -> Single<ListResult<T>> {
         let url = self.urlForResource(resourceName: resourceName)
         let request = self.requestForUrl(url: url!)
-        return self.client.send(request: request).map(decodeList).asSingle()
+        return self.client.send(request: request)
+            .map(interpretResponse)
+            .map(decodeList).asSingle()
     }
     
     open func getOne<T: Codable>(resourceName: String, id: String) -> Single<T?> {
         let url = self.urlForResource(resourceName: resourceName, id: id, action: nil)
         let request = self.requestForUrl(url: url!)
-        return self.client.send(request: request).map(decodeOne).asSingle()
+        return self.client.send(request: request)
+            .map(interpretResponse)
+            .map(decodeOne)
+            .asSingle()
     }
     
     open func save<T: Codable & Identifiable>(resourceName: String, item: T) -> Single<T?> {
         if let id = item.id {
             let url = self.urlForResource(resourceName: resourceName, id: id, action: nil)
             let request = self.requestForUrl(url: url!, method: "PUT")
-            return self.client.send(request: request).map(decodeOne).asSingle()
+            return self.client.send(request: request)
+                .map(interpretResponse)
+                .map(decodeOne)
+                .asSingle()
         } else {
             let url = self.urlForResource(resourceName: resourceName, id: nil, action: nil)
             let request = self.requestForUrl(url: url!, method: "POST")
-            return self.client.send(request: request).map(decodeOne).asSingle()
+            return self.client.send(request: request)
+                .map(interpretResponse)
+                .map(decodeOne)
+                .asSingle()
         }
+    }
+    
+    open func post<T: Codable, J: Codable>(resourceName: String, item: T, type: J.Type) -> Single<J?> {
+        let url = self.urlForResource(resourceName: resourceName)
+        let request = self.requestForUrl(url: url!, method: "POST")
+        return self.client.send(request: request).map(interpretResponse).map { data in
+            do {
+                return try JSONDecoder().decode(J.self, from: data)
+            } catch {
+                return nil
+            }
+        }
+        .asSingle()
     }
     
     open func remove(resourceName: String, id: String) -> Single<Bool> {
         let url = self.urlForResource(resourceName: resourceName, id: id, action: nil)
         let request = self.requestForUrl(url: url!, method: "DELETE")
-        return self.client.send(request: request).map(decodeRemove).asSingle()
+        return self.client.send(request: request).map(interpretResponse).map(decodeRemove).asSingle()
     }
     
     open func encodeAuthentication(username: String, password: String) -> Dictionary<String, Any> {
@@ -99,6 +124,14 @@ open class DefaultRestAdapter : RestAdaptable {
     
     open func decodeRemove(data: Data) -> Bool {
         return true // non-error response is succcess
+    }
+    
+    open func decodeError(data: Data) -> ErrorResponse? {
+        do {
+            return try JSONDecoder().decode(ErrorResponse.self, from: data)
+        } catch {
+            return nil
+        }
     }
     
     open func urlForAuthentication() -> URL? {
@@ -150,13 +183,36 @@ open class DefaultRestAdapter : RestAdaptable {
         return request
     }
     
-    open func setToken(token: String) {
-        self.token = token
+    open func setAuthorization(auth: AuthResponse) {
+        self.token = auth.access_token
     }
-    
+
     open func authorizeRequest(request: inout URLRequest) {
         if let token = self.token {
             request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+    }
+    
+    open func interpretResponse(response: HttpResponse) throws -> Data {
+        if response.success {
+            return response.data!
+        } else if response.data != nil {
+            if let error = response.error,
+               let errorResponse = self.decodeError(data: response.data!) {
+               
+                switch error {
+                case .badRequest:
+                    throw RestError.badRequest(errorResponse)
+                case .unauthorized:
+                    throw RestError.unauthorized(errorResponse)
+                default:
+                    throw RestError.unknown(errorResponse)
+                }
+            } else {
+                throw RestError.protocolFailure
+            }
+        } else {
+            throw RestError.protocolFailure
         }
     }
 }

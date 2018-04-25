@@ -43,6 +43,10 @@ public class Resource<T: Codable & Identifiable> {
         return self.adapter.save(resourceName: name, item: item)
     }
     
+    public func post<J: Codable>(item: T, type: J.Type) -> Single<J?> {
+        return self.adapter.post(resourceName: name, item: item, type: J.self)
+    }
+    
     public func remove(id: String) ->Single<Bool> {
         return self.adapter.remove(resourceName: name, id: id)
     }
