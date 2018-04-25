@@ -25,11 +25,8 @@ open class DefaultRestAdapter : RestAdaptable {
             return Observable.of(nil).asSingle();
         }
         
-        let payload = self.encodeAuthentication(username: username, password: password)
-        
-        guard let request = self.postRequestForUrl(url: url, parameters: payload) else {
-            return Observable.of(nil).asSingle();
-        }
+        var request = self.requestForUrl(url: url, method: "POST")
+        request.httpBody = self.encodeAuthentication(username: username, password: password)
         
         return self.client.send(request: request)
             .map(interpretResponse)
@@ -92,14 +89,16 @@ open class DefaultRestAdapter : RestAdaptable {
         return self.client.send(request: request).map(interpretResponse).map(decodeRemove).asSingle()
     }
     
-    open func encodeAuthentication(username: String, password: String) -> Dictionary<String, Any> {
-        return [
+    open func encodeAuthentication(username: String, password: String) -> Data? {
+        let parameters = [
             "username": username,
             "password": password,
             "grant_type": "password",
-            "client_id": "test",
-            "client_secret": "test"
+            "client_id": "",
+            "client_secret": ""
         ]
+
+        return try? JSONEncoder().encode(parameters)
     }
     
     open func decodeAuthentication(data: Data) -> AuthResponse? {
@@ -161,26 +160,18 @@ open class DefaultRestAdapter : RestAdaptable {
         return path
     }
     
-    open func postRequestForUrl(url: URL, parameters: Dictionary<String, Any>) -> URLRequest? {
-        var request = self.requestForUrl(url: url, method: "POST")
-        
-        do {
-            let json = try JSONSerialization.data(withJSONObject: parameters, options: [])
-            
-            request.httpBody = json
-            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.addValue("application/json", forHTTPHeaderField: "Accept")
-        } catch {
-            return nil
-        }
-        
-        return request
-    }
-    
     open func requestForUrl(url: URL, method: String = "GET") -> URLRequest {
         var request = URLRequest(url: url)
+        
         request.httpMethod = method
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        
+        if method == "POST" || method == "PUT" {
+            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
+        
         self.authorizeRequest(request: &request)
+        
         return request
     }
     
