@@ -36,5 +36,6 @@ public enum HttpError: Error {
 }
 
 public protocol HttpClientProtocol {
+    var debug: Bool { get set }
     func send(request: URLRequest) -> Observable<HttpResponse>
 }
