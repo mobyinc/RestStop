@@ -20,7 +20,7 @@ public class Store {
         return Store.sharedInstance!
     }
     
-    var adapter: RestAdaptable
+    public private(set) var adapter: RestAdaptable
 
     public init(adapter: RestAdaptable) {
         self.adapter = adapter;
@@ -30,8 +30,8 @@ public class Store {
         }
     }
     
-    public func startSession(username: String, password: String) -> Single<Bool> {
-        return self.adapter.authenticate(username: username, password: password)
+    public func startSession(path: String, username: String, password: String) -> Single<Bool> {
+        return self.adapter.authenticate(path: path, username: username, password: password)
             .map { response in
                 guard let response = response else {
                     return false
@@ -39,7 +39,7 @@ public class Store {
                 
                 if let encoded = try? self.encoder.encode(response) {
                     UserDefaults.standard.set(encoded, forKey: "SESSION")
-                    self.adapter.setAuthorization(auth: response)
+                    self.adapter.setAuthentication(auth: response)
                     return true
                 } else {
                     return false
@@ -49,8 +49,8 @@ public class Store {
     
     public func restoreSession() -> Bool {
         if let session = UserDefaults.standard.data(forKey: "SESSION") {
-            if let decoded = try? self.decoder.decode(AuthResponse.self, from: session) {
-                self.adapter.setAuthorization(auth: decoded)
+            if let decoded = try? self.decoder.decode(Authentication.self, from: session) {
+                self.adapter.setAuthentication(auth: decoded)
                 return true
             } else {
                 return false
@@ -66,9 +66,5 @@ public class Store {
     
     public func endSession() {
         UserDefaults.standard.removeObject(forKey: "SESSION")
-    }
-    
-    public func resource<T: Codable & Identifiable>(name: String, type: T.Type) -> Resource<T> {
-        return Resource<T>(adapter: self.adapter, name: name);
     }
 }

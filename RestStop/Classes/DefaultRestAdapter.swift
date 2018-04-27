@@ -13,154 +13,125 @@ import RxSwift
 open class DefaultRestAdapter : RestAdaptable {
     public private(set) var baseUrl: URL
     public private(set) var client: HttpClientProtocol
-    public var token: String?
+    
+    public var authentication: Authentication?
     
     public init(baseUrlString: String, httpClient: HttpClientProtocol) {
         self.baseUrl = URL(string: baseUrlString)!
         self.client = httpClient
     }
 
-    open func authenticate(username: String, password: String) -> Single<AuthResponse?> {
-        guard let url = self.urlForAuthentication() else {
-            return Observable.of(nil).asSingle();
-        }
-        
-        var request = self.requestForUrl(url: url, method: "POST")
-        request.httpBody = self.encodeAuthentication(username: username, password: password)
-        
-        return self.client.send(request: request)
-            .map(interpretResponse)
-            .map(decodeAuthentication)
-            .asSingle();
-    }
+    // MARK: Authentication
+    
+    open func authenticate(path: String, username: String, password: String) -> Single<Authentication?> {
+        let data = self.encodeAuthentication(username: username, password: password)
 
-    open func getList<T: Codable>(resourceName: String, pagination: Pagination?, filters: Filter?) -> Single<ListResult<T>> {
-        let url = self.urlForResource(resourceName: resourceName)
-        let request = self.requestForUrl(url: url!)
-        return self.client.send(request: request)
-            .map(interpretResponse)
-            .map(decodeList).asSingle()
+        return self.performBodyRequest(method: "POST", path: path, parameters: nil, data: data)
+            .map { self.decodeAuthentication(data: $0) }
     }
     
-    open func getOne<T: Codable>(resourceName: String, id: String) -> Single<T?> {
-        let url = self.urlForResource(resourceName: resourceName, id: id, action: nil)
-        let request = self.requestForUrl(url: url!)
-        return self.client.send(request: request)
-            .map(interpretResponse)
-            .map(decodeOne)
-            .asSingle()
-    }
-    
-    open func save<T: Codable & Identifiable>(resourceName: String, item: T) -> Single<T?> {
-        if let id = item.id {
-            let url = self.urlForResource(resourceName: resourceName, id: id, action: nil)
-            let request = self.requestForUrl(url: url!, method: "PUT")
-            return self.client.send(request: request)
-                .map(interpretResponse)
-                .map(decodeOne)
-                .asSingle()
-        } else {
-            let url = self.urlForResource(resourceName: resourceName, id: nil, action: nil)
-            let request = self.requestForUrl(url: url!, method: "POST")
-            return self.client.send(request: request)
-                .map(interpretResponse)
-                .map(decodeOne)
-                .asSingle()
-        }
-    }
-    
-    open func post<T: Codable, J: Codable>(resourceName: String, item: T, type: J.Type) -> Single<J?> {
-        let url = self.urlForResource(resourceName: resourceName)
-        var request = self.requestForUrl(url: url!, method: "POST")
-        request.httpBody = try? JSONEncoder().encode(item)
-        return self.client.send(request: request).map(interpretResponse).map { data in
-            do {
-                return try JSONDecoder().decode(J.self, from: data)
-            } catch {
-                return nil
-            }
-        }
-        .asSingle()
-    }
-    
-    open func remove(resourceName: String, id: String) -> Single<Bool> {
-        let url = self.urlForResource(resourceName: resourceName, id: id, action: nil)
-        let request = self.requestForUrl(url: url!, method: "DELETE")
-        return self.client.send(request: request).map(interpretResponse).map(decodeRemove).asSingle()
+    open func setAuthentication(auth: Authentication) {
+        self.authentication = auth
     }
     
     open func encodeAuthentication(username: String, password: String) -> Data? {
         let parameters = [
             "username": username,
             "password": password,
-            "grant_type": "password",
-            "client_id": "",
-            "client_secret": ""
+            "grant_type": "password"
         ]
-
+        
         return try? JSONEncoder().encode(parameters)
     }
     
-    open func decodeAuthentication(data: Data) -> AuthResponse? {
-        return try? JSONDecoder().decode(AuthResponse.self, from: data)
+    open func decodeAuthentication(data: Data?) -> Authentication? {
+        return nil // must override
     }
     
-    open func decodeList<T: Codable>(data: Data) -> ListResult<T> {
-        do {
-            let response = try JSONDecoder().decode(GetListResponse<T>.self, from: data)
-            return ListResult<T>(total: response.total_results, page: response.page, perPage: response.per_page, items: response.results)
-        } catch {
-            return ListResult<T>(total: 0, page: 0, perPage: 0, items: [])
+    open func authorizeRequest(request: inout URLRequest) {
+        if let auth = self.authentication {
+            request.addValue("Bearer \(auth.token)", forHTTPHeaderField: "Authorization")
         }
     }
     
-    open func decodeOne<T: Codable>(data: Data) -> T? {
-        do {
-            return try JSONDecoder().decode(T.self, from: data)
-        } catch {
-            return nil
-        }
-    }
+    // MARK: Request Methods
     
-    open func decodeRemove(data: Data) -> Bool {
-        return true // non-error response is succcess
+    open func get<T: Codable>(path: String, responseType: T.Type) -> Single<T?> {
+        return self.get(path: path, parameters: nil, responseType: responseType)
     }
-    
-    open func decodeError(data: Data) -> ErrorResponse? {
-        do {
-            return try JSONDecoder().decode(ErrorResponse.self, from: data)
-        } catch {
-            return nil
-        }
-    }
-    
-    open func urlForAuthentication() -> URL? {
-        return URL(string: "oauth/authorize", relativeTo: self.baseUrl)
-    }
-    
-    open func urlForResource(resourceName: String) -> URL? {
-        return self.urlForResource(resourceName: resourceName, id: nil, action: nil)
-    }
-    
-    open func urlForResource(resourceName: String, id: String?, action: String?) -> URL? {
-        return URL(string: self.pathForResource(resourceName: resourceName, id: id, action: action), relativeTo: self.baseUrl)
-    }
-    
-    open func pathForResource(resourceName: String, id: String?, action: String?) -> String {
-        var path: String = ""
-        
-        if let action = action, let id = id {
-            path = "\(resourceName)/\(id)/\(action)"
-        } else if let id = id {
-            path = "\(resourceName)/\(id)"
-        } else {
-            path = "\(resourceName)"
+
+    open func get<T: Codable>(path: String, parameters: [String:String]?, responseType: T.Type) -> Single<T?> {
+        guard let url = self.urlWithPath(path, parameters: parameters) else {
+            return Observable.of(nil).asSingle()
         }
         
-        return path
+        let request = self.requestWithUrl(url)
+        
+        return self.client.send(request: request)
+            .map(interpretResponse)
+            .map { try? JSONDecoder().decode(T.self, from: $0) }
+            .asSingle()
     }
     
-    open func requestForUrl(url: URL, method: String = "GET") -> URLRequest {
+    open func post<T: Codable, J: Codable>(path: String, requestObject: T?, responseType: J.Type) -> Single<J?> {
+        return self.post(path: path, parameters: nil, requestObject: requestObject, responseType: responseType)
+    }
+    
+    open func post<T: Codable, J: Codable>(path: String, parameters: [String:String]?, requestObject: T?, responseType: J.Type) -> Single<J?> {
+        let data = try? JSONEncoder().encode(requestObject)
+
+        return self.post(path: path, parameters: parameters, data: data, responseType: responseType)
+    }
+    
+    open func post<T: Codable>(path: String, parameters: [String:String]?, data: Data?, responseType: T.Type) -> Single<T?> {
+        return self.performBodyRequest(method: "POST", path: path, parameters: parameters, data: data, responseType: responseType)
+    }
+    
+    open func performBodyRequest<T: Codable>(method: String, path: String, parameters: [String:String]?, data: Data?, responseType: T.Type) -> Single<T?> {
+        return self.performBodyRequest(method: method, path: path, parameters: parameters, data: data)
+            .map { data in
+                if let data = data {
+                    return try? JSONDecoder().decode(T.self, from: data)
+                } else {
+                    return nil
+                }
+            }
+    }
+    
+    open func performBodyRequest(method: String, path: String, parameters: [String:String]?, data: Data?) -> Single<Data?> {
+        guard let url = self.urlWithPath(path, parameters: parameters) else {
+            return Observable.of(nil).asSingle()
+        }
+        
+        var request = self.requestWithUrl(url, method: method)
+        request.httpBody = data
+        
+        return self.client.send(request: request)
+            .map(interpretResponse)
+            .asSingle()
+    }
+
+    // MARK: Request Preparation
+    
+    open func urlWithPath(_ path: String, parameters: [String:String]? = nil) -> URL? {
+        guard let url = URL(string: path, relativeTo: self.baseUrl) else {
+            return nil
+        }
+        
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
+            return nil
+        }
+        
+        if let params = parameters {
+            components.queryItems = params.keys.map { key in
+                return URLQueryItem(name: key, value: params[key])
+            }
+        }
+        
+        return components.url
+    }
+    
+    open func requestWithUrl(_ url: URL, method: String = "GET") -> URLRequest {
         var request = URLRequest(url: url)
         
         request.httpMethod = method
@@ -175,14 +146,10 @@ open class DefaultRestAdapter : RestAdaptable {
         return request
     }
     
-    open func setAuthorization(auth: AuthResponse) {
-        self.token = auth.access_token
-    }
-
-    open func authorizeRequest(request: inout URLRequest) {
-        if let token = self.token {
-            request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
+    // MARK: Error Handling
+    
+    open func decodeError(data: Data) -> ErrorResponse? {
+        return try? JSONDecoder().decode(ErrorResponse.self, from: data)
     }
     
     open func interpretResponse(response: HttpResponse) throws -> Data {

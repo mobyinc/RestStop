@@ -11,48 +11,6 @@
 import Foundation
 import RxSwift
 
-public enum SortDirection: String {
-    case ascending = "asc"
-    case decending = "desc"
-}
-
-public struct Pagination {
-    public var page: Int
-    public var perPage: Int
-    public var sortField: String
-    public var sortDirection: SortDirection
-}
-
-public struct Filter {
-    public var field: String
-    public var value: String
-    public var op: String
-}
-
-public struct GetListResponse<T: Codable>: Codable {
-    public var total_results: Int
-    public var page: Int
-    public var per_page: Int
-    public var results: Array<T>
-}
-
-public struct AuthResponse: Codable {
-    
-    public init(access_token: String, token_type: String, expires_in: String, refresh_token: String, scope: String) {
-        self.access_token = access_token
-        self.token_type = token_type
-        self.expires_in = expires_in
-        self.refresh_token = refresh_token
-        self.scope = scope
-    }
-    
-    public var access_token: String
-    public var token_type: String
-    public var expires_in: String
-    public var refresh_token: String
-    public var scope: String
-}
-
 public struct ErrorResponse: Codable {
     public var code: Int
     public var message: String
@@ -72,12 +30,22 @@ public enum RestError: Error {
     case unknown(ErrorResponse?)
 }
 
+public struct Authentication: Codable {
+    public var token: String
+    public var parameters: [String:String]
+    
+    public init(token: String, parameters: [String:String]) {
+        self.token = token
+        self.parameters = parameters
+    }
+}
+
 public protocol RestAdaptable {
-    func authenticate(username: String, password: String) -> Single<AuthResponse?>
-    func setAuthorization(auth: AuthResponse)
-    func getList<T: Codable & Identifiable>(resourceName: String, pagination: Pagination?, filters: Filter?) -> Single<ListResult<T>>
-    func getOne<T: Codable & Identifiable>(resourceName: String, id: String) -> Single<T?>
-    func save<T: Codable & Identifiable>(resourceName: String, item: T) -> Single<T?>
-    func post<T: Codable, J: Codable>(resourceName: String, item: T, type: J.Type) -> Single<J?>
-    func remove(resourceName: String, id: String) -> Single<Bool>
+    func authenticate(path: String, username: String, password: String) -> Single<Authentication?>
+    func setAuthentication(auth: Authentication)
+    func get<T: Codable>(path: String, responseType: T.Type) -> Single<T?>
+    func get<T: Codable>(path: String, parameters: [String:String]?, responseType: T.Type) -> Single<T?>
+    func post<T: Codable, J: Codable>(path: String, requestObject: T?, responseType: J.Type) -> Single<J?>
+    func post<T: Codable, J: Codable>(path: String, parameters: [String:String]?, requestObject: T?, responseType: J.Type) -> Single<J?>
+    func post<T: Codable>(path: String, parameters: [String:String]?, data: Data?, responseType: T.Type) -> Single<T?>
 }
