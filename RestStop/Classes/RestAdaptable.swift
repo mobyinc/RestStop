@@ -23,8 +23,17 @@ public struct ErrorResponse: Codable {
     }
 }
 
+public enum HttpMethod: String {
+    case GET
+    case POST
+    case PUT
+    case PATCH
+    case DELETE
+}
+
 public enum RestError: Error {
     case protocolFailure
+    case parseError
     case unauthorized(ErrorResponse?)
     case badRequest(ErrorResponse?)
     case unknown(ErrorResponse?)
@@ -38,14 +47,16 @@ public struct Authentication: Codable {
         self.token = token
         self.parameters = parameters
     }
+    
+    public func toResource() -> Resource {
+        return Resource.fromCodable(self)
+    }
 }
 
 public protocol RestAdaptable {
     func authenticate(path: String, username: String, password: String) -> Single<Authentication?>
     func setAuthentication(auth: Authentication)
-    func get<T: Codable>(path: String, responseType: T.Type) -> Single<T?>
-    func get<T: Codable>(path: String, parameters: [String:String]?, responseType: T.Type) -> Single<T?>
-    func post<T: Codable, J: Codable>(path: String, requestObject: T?, responseType: J.Type) -> Single<J?>
-    func post<T: Codable, J: Codable>(path: String, parameters: [String:String]?, requestObject: T?, responseType: J.Type) -> Single<J?>
-    func post<T: Codable>(path: String, parameters: [String:String]?, data: Data?, responseType: T.Type) -> Single<T?>
+    func get(path: String, parameters: [String:String]?) -> Single<Resource>
+    func post(path: String, parameters: [String:String]?, data: Data?) -> Single<Resource>
+    func performRequest(method: HttpMethod, path: String, parameters: [String:String]?, data: Data?) -> Single<Data?>
 }

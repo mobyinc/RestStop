@@ -15,16 +15,16 @@ open class DefaultHttpClient : HttpClientProtocol {
 
     public init() { }
 
-    public func send(request: URLRequest) -> Observable<HttpResponse> {
+    public func send(request: URLRequest) -> Single<HttpResponse> {
         if self.debug { self.log(request: request) }
         
-        return Observable<HttpResponse>.create { observer in
+        return Single<HttpResponse>.create { observer in
             let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                let httpResponse = (response as! HTTPURLResponse)
+                let httpResponse = (response as? HTTPURLResponse)
 
                 if self.debug { self.log(data: data, response: httpResponse, error: error) }
                 
-                let status = httpResponse.statusCode
+                let status = httpResponse?.statusCode ?? 0
                 var resp = HttpResponse(code: status, data: data, error: nil)
                 
                 if error != nil {
@@ -42,9 +42,8 @@ open class DefaultHttpClient : HttpClientProtocol {
                         resp.error = HttpError.unknown
                     }
                 }
-                
-                observer.onNext(resp)
-                observer.onCompleted()
+
+                observer(.success(resp))
             }
             
             task.resume()

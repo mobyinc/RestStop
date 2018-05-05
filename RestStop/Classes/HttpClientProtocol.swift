@@ -15,6 +15,7 @@ public struct HttpResponse {
     public var data: Data?
     public var error: HttpError?
     public var internalError: Error?
+    public var originalRequest: URLRequest?
     
     public var success: Bool {
         return code >= 200 && code < 300 && error == nil && internalError == nil && data != nil
@@ -37,5 +38,5 @@ public enum HttpError: Error {
 
 public protocol HttpClientProtocol {
     var debug: Bool { get set }
-    func send(request: URLRequest) -> Observable<HttpResponse>
+    func send(request: URLRequest) -> Single<HttpResponse>
 }

@@ -26,7 +26,7 @@ open class DefaultRestAdapter : RestAdaptable {
     open func authenticate(path: String, username: String, password: String) -> Single<Authentication?> {
         let data = self.encodeAuthentication(username: username, password: password)
 
-        return self.performBodyRequest(method: "POST", path: path, parameters: nil, data: data)
+        return self.performRequest(method: .POST, path: path, parameters: nil, data: data)
             .map { self.decodeAuthentication(data: $0) }
     }
     
@@ -55,60 +55,27 @@ open class DefaultRestAdapter : RestAdaptable {
     }
     
     // MARK: Request Methods
-    
-    open func get<T: Codable>(path: String, responseType: T.Type) -> Single<T?> {
-        return self.get(path: path, parameters: nil, responseType: responseType)
+
+    open func get(path: String, parameters: [String:String]?) -> Single<Resource> {
+        return self.performRequest(method: .GET, path: path, parameters: parameters, data: nil)
+            .map { Resource(data: $0) }
     }
 
-    open func get<T: Codable>(path: String, parameters: [String:String]?, responseType: T.Type) -> Single<T?> {
+    open func post(path: String, parameters: [String:String]?, data: Data?) -> Single<Resource> {
+        return self.performRequest(method: .POST, path: path, parameters: parameters, data: data)
+            .map { Resource(data: $0) }
+    }
+    
+    open func performRequest(method: HttpMethod, path: String, parameters: [String:String]?, data: Data?) -> Single<Data?> {
         guard let url = self.urlWithPath(path, parameters: parameters) else {
-            return Observable.of(nil).asSingle()
+            return Single.just(nil)
         }
         
-        let request = self.requestWithUrl(url)
-        
-        return self.client.send(request: request)
-            .map(interpretResponse)
-            .map { try? JSONDecoder().decode(T.self, from: $0) }
-            .asSingle()
-    }
-    
-    open func post<T: Codable, J: Codable>(path: String, requestObject: T?, responseType: J.Type) -> Single<J?> {
-        return self.post(path: path, parameters: nil, requestObject: requestObject, responseType: responseType)
-    }
-    
-    open func post<T: Codable, J: Codable>(path: String, parameters: [String:String]?, requestObject: T?, responseType: J.Type) -> Single<J?> {
-        let data = try? JSONEncoder().encode(requestObject)
-
-        return self.post(path: path, parameters: parameters, data: data, responseType: responseType)
-    }
-    
-    open func post<T: Codable>(path: String, parameters: [String:String]?, data: Data?, responseType: T.Type) -> Single<T?> {
-        return self.performBodyRequest(method: "POST", path: path, parameters: parameters, data: data, responseType: responseType)
-    }
-    
-    open func performBodyRequest<T: Codable>(method: String, path: String, parameters: [String:String]?, data: Data?, responseType: T.Type) -> Single<T?> {
-        return self.performBodyRequest(method: method, path: path, parameters: parameters, data: data)
-            .map { data in
-                if let data = data {
-                    return try? JSONDecoder().decode(T.self, from: data)
-                } else {
-                    return nil
-                }
-            }
-    }
-    
-    open func performBodyRequest(method: String, path: String, parameters: [String:String]?, data: Data?) -> Single<Data?> {
-        guard let url = self.urlWithPath(path, parameters: parameters) else {
-            return Observable.of(nil).asSingle()
-        }
-        
-        var request = self.requestWithUrl(url, method: method)
+        var request = self.requestWithUrl(url, method: method.rawValue)
         request.httpBody = data
         
         return self.client.send(request: request)
             .map(interpretResponse)
-            .asSingle()
     }
 
     // MARK: Request Preparation
@@ -148,7 +115,7 @@ open class DefaultRestAdapter : RestAdaptable {
     
     // MARK: Error Handling
     
-    open func decodeError(data: Data) -> ErrorResponse? {
+    open func decodeError(data: Data, request: URLRequest?) -> ErrorResponse? {
         return try? JSONDecoder().decode(ErrorResponse.self, from: data)
     }
     
@@ -157,7 +124,7 @@ open class DefaultRestAdapter : RestAdaptable {
             return response.data!
         } else if response.data != nil {
             if let error = response.error,
-               let errorResponse = self.decodeError(data: response.data!) {
+               let errorResponse = self.decodeError(data: response.data!, request: response.originalRequest) {
                
                 switch error {
                 case .badRequest:
