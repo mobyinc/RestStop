@@ -12,28 +12,19 @@ import RxSwift
 import SwiftHash
 
 public class Store {
-    private final var AUTH_CACHE_KEY = "authcachekey"
-    static var sharedInstance: Store?
+    public private(set) static var adapter: RestAdaptable!
 
-    public static var shared: Store! {
-        return Store.sharedInstance!
-    }
-    
-    public private(set) var adapter: RestAdaptable
-    private var cache: LocalCacheProtocol;
+    private static var AUTH_CACHE_KEY = "authcachekey"   
+    private static var cache: LocalCacheProtocol!
 
     public init(adapter: RestAdaptable, cache: LocalCacheProtocol) {
-        self.adapter = adapter;
-        self.cache = cache;
-        
-        if Store.sharedInstance == nil {
-            Store.sharedInstance = self
-        }
+        Store.adapter = adapter
+        Store.cache = cache
     }
     
     // MARK: Session
     
-    public func startSession(path: String, username: String, password: String) -> Single<Bool> {
+    public static func startSession(path: String, username: String, password: String) -> Single<Bool> {
         return self.adapter.authenticate(path: path, username: username, password: password)
             .map { auth in
                 guard let auth = auth else {
@@ -47,7 +38,7 @@ public class Store {
             }
     }
     
-    public func restoreSession() -> Bool {
+    public static func restoreSession() -> Bool {
         if let value = self.cache.get(self.AUTH_CACHE_KEY),
             let auth = value.asType(Authentication.self) {
             self.adapter.setAuthentication(auth: auth)
@@ -57,22 +48,22 @@ public class Store {
         }
     }
     
-    public func refreshSession() -> Bool {
+    public static func refreshSession() -> Bool {
         // TODO
-        return false;
+        return false
     }
     
-    public func endSession() {
+    public static func endSession() {
         self.cache.delete(AUTH_CACHE_KEY)
     }
     
     // MARK: Data Access
     
-    public func get(path: String) -> Single<Resource> {
+    public static func get(path: String) -> Single<Resource> {
         return self.get(path: path, parameters: nil)
     }
     
-    public func get(path: String, parameters: [String:String]?) -> Single<Resource> {
+    public static func get(path: String, parameters: [String:String]?) -> Single<Resource> {
         let key = self.cacheKeyForRequest(path: path, parameters: parameters, data: nil)
         let value = self.cache.get(key)
         
@@ -87,7 +78,7 @@ public class Store {
         }
     }
     
-    public func post<T: Codable>(path: String, parameters: [String:String]?, object: T) -> Single<Resource> {
+    public static func post<T: Codable>(path: String, parameters: [String:String]?, object: T) -> Single<Resource> {
         let requestBody = Resource.fromCodable(object).data
         let key = self.cacheKeyForRequest(path: path, parameters: parameters, data: requestBody)
         let value = self.cache.get(key)
@@ -102,10 +93,14 @@ public class Store {
             }
         }
     }
+}
 
-    // MARK: Utility
+
+// MARK: Utility
+
+private extension Store {
     
-    private func cacheKeyForRequest(path: String, parameters: [String:String]?, data: Data?) -> String {
+    private static func cacheKeyForRequest(path: String, parameters: [String:String]?, data: Data?) -> String {
         var keyData = path.data(using: .utf8)!
         
         if let parameters = parameters,
@@ -120,7 +115,8 @@ public class Store {
         return self.md5(data: keyData)
     }
     
-    private func md5(data: Data) -> String {
+    private static func md5(data: Data) -> String {
         return MD5(String(describing: data))
     }
+
 }
