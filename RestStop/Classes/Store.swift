@@ -13,10 +13,10 @@ import SwiftHash
 
 public class Store {
     public private(set) static var adapter: RestAdaptable!
-
+    
     private static var AUTH_CACHE_KEY = "authcachekey"   
     private static var cache: LocalCacheProtocol!
-
+    
     public init(adapter: RestAdaptable, cache: LocalCacheProtocol) {
         Store.adapter = adapter
         Store.cache = cache
@@ -30,12 +30,12 @@ public class Store {
                 guard let auth = auth else {
                     return false
                 }
-
+                
                 self.cache.set(key: self.AUTH_CACHE_KEY, value: auth.toResource())
                 self.adapter.setAuthentication(auth: auth)
                 
                 return true
-            }
+        }
     }
     
     public static func restoreSession() -> Bool {
@@ -53,8 +53,10 @@ public class Store {
         return false
     }
     
-    public static func endSession() {
-        self.cache.delete(AUTH_CACHE_KEY)
+    public static func endSession(_ path: String) -> Single<Bool> {
+        cache.delete(AUTH_CACHE_KEY)
+        
+        return post(path: path)
     }
     
     // MARK: Data Access
@@ -74,7 +76,7 @@ public class Store {
                 .map { resource in
                     self.cache.set(key: key, value: resource)
                     return resource
-                }
+            }
         }
     }
     
@@ -91,6 +93,13 @@ public class Store {
                     self.cache.set(key: key, value: resource)
                     return resource
             }
+        }
+    }
+    
+    public static func post(path: String) -> Single<Bool> {
+        return adapter.post(path: path, parameters: nil, data: nil)
+            .map { resource in
+                return true
         }
     }
 }
@@ -118,5 +127,5 @@ private extension Store {
     private static func md5(data: Data) -> String {
         return MD5(String(describing: data))
     }
-
+    
 }
