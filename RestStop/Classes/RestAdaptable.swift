@@ -37,6 +37,15 @@ public enum RestError: Error {
     case unauthorized(ErrorResponse?)
     case badRequest(ErrorResponse?)
     case unknown(ErrorResponse?)
+    
+    public func errorResponse() -> ErrorResponse? {
+        switch self {
+        case .unauthorized(let response), .badRequest(let response), .unknown(let response):
+            return response
+        default:
+            return nil
+        }
+    }
 }
 
 public struct Authentication: Codable {

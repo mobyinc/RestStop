@@ -11,7 +11,7 @@ import Foundation
 import RxSwift
 
 open class DefaultHttpClient : HttpClientProtocol {
-    public var debug: Bool = false
+    public var debug: Bool = true
 
     public init() { }
 
@@ -20,9 +20,12 @@ open class DefaultHttpClient : HttpClientProtocol {
         
         return Single<HttpResponse>.create { observer in
             let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            
                 let httpResponse = (response as? HTTPURLResponse)
 
-                if self.debug { self.log(data: data, response: httpResponse, error: error) }
+                if self.debug {
+                    self.log(data: data, response: httpResponse, error: error)
+                }
                 
                 let status = httpResponse?.statusCode ?? 0
                 var resp = HttpResponse(code: status, data: data, error: nil)
@@ -33,6 +36,7 @@ open class DefaultHttpClient : HttpClientProtocol {
                 } else if data == nil {
                     resp.error = HttpError.noData
                 } else if status < 200 || status >= 300  {
+                    
                     switch status {
                     case 400:
                         resp.error = HttpError.badRequest

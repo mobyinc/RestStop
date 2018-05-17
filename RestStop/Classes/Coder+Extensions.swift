@@ -8,23 +8,23 @@
 
 import Foundation
 
-typealias JSONDict = [String: Any]
+public typealias JSONDict = [String: Any]
 
-extension Decodable {
-    static func decode(data: Data) throws -> Self {
+public extension Decodable {
+    public static func decode(data: Data) throws -> Self {
         let decoder = JSONDecoder()
         return try decoder.decode(Self.self, from: data)
     }
 }
 
-extension Encodable {
-    func encode() throws -> Data {
+public extension Encodable {
+    public func encode() throws -> Data {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
         return try encoder.encode(self)
     }
     
-    func asDictionary() throws -> JSONDict {
+    public func asDictionary() throws -> JSONDict {
         let data = try JSONEncoder().encode(self)
         guard let dictionary = try JSONSerialization.jsonObject(with: data,
                                                                 options: .allowFragments) as? JSONDict else {
@@ -33,7 +33,7 @@ extension Encodable {
         return dictionary
     }
     
-    var dictionary: [String: Any]? {
+    public var dictionary: [String: Any]? {
         guard let data = try? JSONEncoder().encode(self) else { return nil }
         return (try? JSONSerialization.jsonObject(with: data,
                                                   options: .allowFragments)).flatMap { $0 as? JSONDict }

@@ -116,15 +116,15 @@ open class DefaultRestAdapter : RestAdaptable {
     // MARK: Error Handling
     
     open func decodeError(data: Data, request: URLRequest?) -> ErrorResponse? {
-        return try? JSONDecoder().decode(ErrorResponse.self, from: data)
+        return try? ErrorResponse.decode(data: data)
     }
     
     open func interpretResponse(response: HttpResponse) throws -> Data {
-        if response.success {
-            return response.data!
-        } else if response.data != nil {
+        if response.success, let data = response.data {
+            return data
+        } else if let data = response.data {
             if let error = response.error,
-               let errorResponse = self.decodeError(data: response.data!, request: response.originalRequest) {
+               let errorResponse = self.decodeError(data: data, request: response.originalRequest) {
                
                 switch error {
                 case .badRequest:
