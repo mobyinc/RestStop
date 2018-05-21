@@ -71,6 +71,11 @@ open class DefaultRestAdapter : RestAdaptable {
             .map { Resource(data: $0) }
     }
 
+    open func delete(path: String, parameters: urlParams?, data: Data?) -> Single<Resource> {
+        return self.performRequest(method: .DELETE, path: path, parameters: parameters, data: data)
+            .map { Resource(data: $0) }
+    }
+
     open func performRequest(method: HttpMethod, path: String, parameters: urlParams?, data: Data?) -> Single<Data?> {
         guard let url = self.urlWithPath(path, parameters: parameters) else {
             return Single.just(nil)

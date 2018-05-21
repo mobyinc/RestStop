@@ -70,5 +70,6 @@ public protocol RestAdaptable {
     func get(path: String, parameters: urlParams?) -> Single<Resource>
     func post(path: String, parameters: urlParams?, data: Data?) -> Single<Resource>
     func put(path: String, parameters: urlParams?, data: Data?) -> Single<Resource>
+    func delete(path: String, parameters: urlParams?, data: Data?) -> Single<Resource>
     func performRequest(method: HttpMethod, path: String, parameters: urlParams?, data: Data?) -> Single<Data?>
 }
