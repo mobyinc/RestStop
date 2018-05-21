@@ -56,17 +56,22 @@ open class DefaultRestAdapter : RestAdaptable {
     
     // MARK: Request Methods
 
-    open func get(path: String, parameters: [String:String]?) -> Single<Resource> {
+    open func get(path: String, parameters: urlParams?) -> Single<Resource> {
         return self.performRequest(method: .GET, path: path, parameters: parameters, data: nil)
             .map { Resource(data: $0) }
     }
 
-    open func post(path: String, parameters: [String:String]?, data: Data?) -> Single<Resource> {
+    open func post(path: String, parameters: urlParams?, data: Data?) -> Single<Resource> {
         return self.performRequest(method: .POST, path: path, parameters: parameters, data: data)
             .map { Resource(data: $0) }
     }
-    
-    open func performRequest(method: HttpMethod, path: String, parameters: [String:String]?, data: Data?) -> Single<Data?> {
+
+    open func put(path: String, parameters: urlParams?, data: Data?) -> Single<Resource> {
+        return self.performRequest(method: .PUT, path: path, parameters: parameters, data: data)
+            .map { Resource(data: $0) }
+    }
+
+    open func performRequest(method: HttpMethod, path: String, parameters: urlParams?, data: Data?) -> Single<Data?> {
         guard let url = self.urlWithPath(path, parameters: parameters) else {
             return Single.just(nil)
         }
@@ -80,7 +85,7 @@ open class DefaultRestAdapter : RestAdaptable {
 
     // MARK: Request Preparation
     
-    open func urlWithPath(_ path: String, parameters: [String:String]? = nil) -> URL? {
+    open func urlWithPath(_ path: String, parameters: urlParams? = nil) -> URL? {
         guard let url = URL(string: path, relativeTo: self.baseUrl) else {
             return nil
         }

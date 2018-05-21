@@ -11,6 +11,8 @@
 import Foundation
 import RxSwift
 
+public typealias urlParams = [String: String]
+
 public struct ErrorResponse: Codable {
     public var code: Int
     public var message: String
@@ -65,7 +67,8 @@ public struct Authentication: Codable {
 public protocol RestAdaptable {
     func authenticate(path: String, username: String, password: String) -> Single<Authentication?>
     func setAuthentication(auth: Authentication)
-    func get(path: String, parameters: [String:String]?) -> Single<Resource>
-    func post(path: String, parameters: [String:String]?, data: Data?) -> Single<Resource>
-    func performRequest(method: HttpMethod, path: String, parameters: [String:String]?, data: Data?) -> Single<Data?>
+    func get(path: String, parameters: urlParams?) -> Single<Resource>
+    func post(path: String, parameters: urlParams?, data: Data?) -> Single<Resource>
+    func put(path: String, parameters: urlParams?, data: Data?) -> Single<Resource>
+    func performRequest(method: HttpMethod, path: String, parameters: urlParams?, data: Data?) -> Single<Data?>
 }

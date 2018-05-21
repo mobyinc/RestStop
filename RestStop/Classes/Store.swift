@@ -96,6 +96,22 @@ public class Store {
         }
     }
     
+    public static func put<T: Codable>(path: String, parameters: [String:String]?, object: T) -> Single<Resource> {
+        let requestBody = Resource.fromCodable(object).data
+        let key = self.cacheKeyForRequest(path: path, parameters: parameters, data: requestBody)
+        let value = self.cache.get(key)
+        
+        if let resource = value {
+            return Single.just(resource)
+        } else {
+            return self.adapter.put(path: path, parameters: parameters, data: requestBody)
+                .map { resource in
+                    self.cache.set(key: key, value: resource)
+                    return resource
+            }
+        }
+    }
+    
     public static func post(path: String) -> Single<Bool> {
         return adapter.post(path: path, parameters: nil, data: nil)
             .map { resource in
