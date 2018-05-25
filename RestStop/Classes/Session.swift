@@ -1,5 +1,5 @@
 //
-//  Store.swift
+//  Session
 //  RestStop
 //  The base object used to retrieve resources and manipulate a user session
 //
@@ -11,15 +11,15 @@ import Foundation
 import RxSwift
 import SwiftHash
 
-public class Store {
+public class Session {
     public private(set) static var adapter: RestAdaptable!
     
     private static var AUTH_CACHE_KEY = "authcachekey"   
     private static var cache: LocalCacheProtocol!
     
     public init(adapter: RestAdaptable, cache: LocalCacheProtocol) {
-        Store.adapter = adapter
-        Store.cache = cache
+        Session.adapter = adapter
+        Session.cache = cache
     }
     
     // MARK: Session
@@ -123,7 +123,7 @@ public class Store {
 
 // MARK: Utility
 
-private extension Store {
+private extension Session {
     
     private static func cacheKeyForRequest(path: String, parameters: [String:String]?, data: Data?) -> String {
         var keyData = path.data(using: .utf8)!
