@@ -22,15 +22,14 @@ public struct Resource : Codable {
     
     public func asType<T: Codable>(_ type: T.Type) -> T? {
         if let data = self.data {
-            
             do {
                 return try JSONDecoder.shared.decode(T.self, from: data)
             } catch {
                 debugPrint(error)
                 return nil
             }
-        } else {
-            return nil
-        }
+        } 
+        
+        return nil
     }
 }

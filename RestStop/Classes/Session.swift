@@ -61,54 +61,72 @@ public class Session {
     
     // MARK: Data Access
     
-    public static func get(path: String) -> Single<Resource> {
-        return self.get(path: path, parameters: nil)
+    public static func get(path: String, cacheResponse: Bool = true) -> Single<Resource> {
+        return self.get(path: path, parameters: nil, cacheResponse: cacheResponse)
     }
     
-    public static func get(path: String, parameters: [String:String]?) -> Single<Resource> {
+    public static func get(path: String, parameters: [String:String]?, cacheResponse: Bool = true) -> Single<Resource> {
+        
         let key = self.cacheKeyForRequest(path: path, parameters: parameters, data: nil)
-        let value = self.cache.get(key)
         
-        if let resource = value {
-            return Single.just(resource)
-        } else {
-            return self.adapter.get(path: path, parameters: parameters)
-                .map { resource in
-                    self.cache.set(key: key, value: resource)
-                    return resource
+        if cacheResponse {
+            let value = self.cache.get(key)
+            
+            if let resource = value {
+                return Single.just(resource)
             }
+        }
+        
+        return self.adapter.get(path: path, parameters: parameters)
+            .map { resource in
+                if cacheResponse {
+                    self.cache.set(key: key, value: resource)
+                }
+                return resource
         }
     }
     
-    public static func post<T: Codable>(path: String, parameters: [String:String]?, object: T) -> Single<Resource> {
+    public static func post<T: Codable>(path: String, parameters: [String:String]?, object: T, cacheResponse: Bool = false) -> Single<Resource> {
         let requestBody = Resource.fromCodable(object).data
-        let key = self.cacheKeyForRequest(path: path, parameters: parameters, data: requestBody)
-        let value = self.cache.get(key)
         
-        if let resource = value {
-            return Single.just(resource)
-        } else {
-            return self.adapter.post(path: path, parameters: parameters, data: requestBody)
-                .map { resource in
-                    self.cache.set(key: key, value: resource)
-                    return resource
+        let key = self.cacheKeyForRequest(path: path, parameters: parameters, data: requestBody)
+        
+        if cacheResponse {
+            let value = self.cache.get(key)
+            
+            if let resource = value {
+                return Single.just(resource)
             }
+        }
+        
+        return self.adapter.post(path: path, parameters: parameters, data: requestBody)
+            .map { resource in
+                if cacheResponse {
+                    self.cache.set(key: key, value: resource)
+                }
+                return resource
         }
     }
     
-    public static func put<T: Codable>(path: String, parameters: [String:String]?, object: T) -> Single<Resource> {
+    public static func put<T: Codable>(path: String, parameters: [String:String]?, object: T, cacheResponse: Bool = false) -> Single<Resource> {
         let requestBody = Resource.fromCodable(object).data
+
         let key = self.cacheKeyForRequest(path: path, parameters: parameters, data: requestBody)
-        let value = self.cache.get(key)
-        
-        if let resource = value {
-            return Single.just(resource)
-        } else {
-            return self.adapter.put(path: path, parameters: parameters, data: requestBody)
-                .map { resource in
-                    self.cache.set(key: key, value: resource)
-                    return resource
+
+        if cacheResponse {
+            let value = self.cache.get(key)
+            
+            if let resource = value {
+                return Single.just(resource)
             }
+        }
+        
+        return self.adapter.put(path: path, parameters: parameters, data: requestBody)
+            .map {resource in
+                if cacheResponse {
+                    self.cache.set(key: key, value: resource)
+                }
+                return resource
         }
     }
     
