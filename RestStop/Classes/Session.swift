@@ -136,6 +136,13 @@ public class Session {
                 return true
         }
     }
+
+    public static func delete(path: String) -> Single<Bool> {
+        return adapter.delete(path: path, parameters: nil, data: nil)
+            .map { resource in
+                return true
+        }
+    }
 }
 
 
