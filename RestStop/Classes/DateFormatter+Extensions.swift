@@ -23,4 +23,12 @@ public extension DateFormatter {
         
         return formatter
     }()
+
+    public static let mediumDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        
+        return formatter
+    }()
 }
