@@ -29,7 +29,14 @@ open class DefaultRestAdapter : RestAdaptable {
         return self.performRequest(method: .POST, path: path, parameters: nil, data: data)
             .map { self.decodeAuthentication(data: $0) }
     }
-    
+
+    open func authenticate(path: String, username: String, magicToken: String) -> Single<Authentication?> {
+        let data = self.encodeAuthentication(username: username, magicToken: magicToken)
+        
+        return self.performRequest(method: .POST, path: path, parameters: nil, data: data)
+            .map { self.decodeAuthentication(data: $0) }
+    }
+
     open func setAuthentication(auth: Authentication) {
         self.authentication = auth
     }
@@ -43,7 +50,17 @@ open class DefaultRestAdapter : RestAdaptable {
         
         return try? JSONEncoder().encode(parameters)
     }
-    
+
+    open func encodeAuthentication(username: String, magicToken: String) -> Data? {
+        let parameters = [
+            "username": username,
+            "magicToken": magicToken,
+            "grant_type": "password"
+        ]
+        
+        return try? JSONEncoder().encode(parameters)
+    }
+
     open func decodeAuthentication(data: Data?) -> Authentication? {
         return nil // must override
     }

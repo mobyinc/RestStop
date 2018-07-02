@@ -37,7 +37,21 @@ public class Session {
                 return true
         }
     }
-    
+
+    public static func startSession(path: String, username: String, magicToken: String) -> Single<Bool> {
+        return self.adapter.authenticate(path: path, username: username, password: magicToken)
+            .map { auth in
+                guard let auth = auth else {
+                    return false
+                }
+                
+                self.cache.set(key: self.AUTH_CACHE_KEY, value: auth.toResource())
+                self.adapter.setAuthentication(auth: auth)
+                
+                return true
+        }
+    }
+
     public static func restoreSession() -> Bool {
         if let value = self.cache.get(self.AUTH_CACHE_KEY),
             let auth = value.asType(Authentication.self) {
