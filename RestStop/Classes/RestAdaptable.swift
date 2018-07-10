@@ -66,6 +66,7 @@ public struct Authentication: Codable {
 
 public protocol RestAdaptable {
     func authenticate(path: String, username: String, password: String) -> Single<Authentication?>
+    func authenticate(path: String, username: String, magicToken: String) -> Single<Authentication?>
     func setAuthentication(auth: Authentication)
     func get(path: String, parameters: urlParams?) -> Single<Resource>
     func post(path: String, parameters: urlParams?, data: Data?) -> Single<Resource>

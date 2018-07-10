@@ -39,7 +39,7 @@ public class Session {
     }
 
     public static func startSession(path: String, username: String, magicToken: String) -> Single<Bool> {
-        return self.adapter.authenticate(path: path, username: username, password: magicToken)
+        return self.adapter.authenticate(path: path, username: username, magicToken: magicToken)
             .map { auth in
                 guard let auth = auth else {
                     return false
