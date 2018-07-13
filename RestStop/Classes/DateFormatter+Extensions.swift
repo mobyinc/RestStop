@@ -24,6 +24,13 @@ public extension DateFormatter {
         return formatter
     }()
 
+    public static let creditCardDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM/yyyy"
+        
+        return formatter
+    }()
+
     public static let mediumDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
