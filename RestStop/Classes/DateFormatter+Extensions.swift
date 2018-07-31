@@ -9,6 +9,7 @@
 import Foundation
 
 public extension DateFormatter {
+    public static let iso8601Formatters = [iso8601, iso8601NoTimeZone, iso8601MicroSeconds]
 
     public static let iso8601: DateFormatter = {
         let formatter = DateFormatter()
@@ -16,21 +17,26 @@ public extension DateFormatter {
         
         return formatter
     }()
-
+    public static let iso8601MicroSeconds: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSZ"
+        
+        return formatter
+    }()
     public static let iso8601NoTimeZone: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         
         return formatter
     }()
-
+    
     public static let creditCardDate: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MM/yyyy"
         
         return formatter
     }()
-
+    
     public static let mediumDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
