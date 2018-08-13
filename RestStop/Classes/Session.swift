@@ -14,7 +14,7 @@ import SwiftHash
 public class Session {
     public private(set) static var adapter: RestAdaptable!
     
-    private static var AUTH_CACHE_KEY = "authcachekey"   
+    public private(set) static var AUTH_CACHE_KEY = "authcachekey"   
     public private(set) static var cache: LocalCacheProtocol!
     
     public init(adapter: RestAdaptable, cache: LocalCacheProtocol) {
