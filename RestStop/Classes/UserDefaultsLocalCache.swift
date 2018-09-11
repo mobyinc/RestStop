@@ -30,6 +30,7 @@ open class UserDefaultsLocalCache : LocalCacheProtocol {
         
         if let encoded = try? self.encoder.encode(entry) {
             UserDefaults.standard.set(encoded, forKey: key)
+            UserDefaults.standard.synchronize()
         }
     }
     
@@ -49,5 +50,23 @@ open class UserDefaultsLocalCache : LocalCacheProtocol {
     
     public func delete(_ key: String) {
         UserDefaults.standard.removeObject(forKey: key)
+        UserDefaults.standard.synchronize()
+    }
+    
+    public func allKeys() -> Array<String> {
+        return Array(UserDefaults.standard.dictionaryRepresentation().keys)
+    }
+    
+    public func requiresMigrationToVersion(_ version: Int) -> Bool {
+        if UserDefaults.standard.value(forKey: "__app_version") != nil {
+            return UserDefaults.standard.integer(forKey: "__app_version") < version
+        } else {
+            return true
+        }
+    }
+    
+    public func setLocalDataVersion(_ version: Int) {
+        UserDefaults.standard.set(version, forKey: "__app_version")
+        UserDefaults.standard.synchronize()
     }
 }

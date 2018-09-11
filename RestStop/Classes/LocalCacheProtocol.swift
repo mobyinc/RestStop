@@ -13,4 +13,7 @@ public protocol LocalCacheProtocol {
     func set(key: String, value: Resource, expiresAt: Date?)
     func get(_ key: String) -> Resource?
     func delete(_ key: String)
+    func allKeys() -> Array<String>
+    func requiresMigrationToVersion(_ version: Int) -> Bool
+    func setLocalDataVersion(_ version: Int)
 }

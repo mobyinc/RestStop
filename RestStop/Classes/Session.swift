@@ -75,15 +75,15 @@ public class Session {
     
     // MARK: Data Access
     
-    public static func get(path: String, cacheResponse: Bool = true) -> Single<Resource> {
-        return self.get(path: path, parameters: nil, cacheResponse: cacheResponse)
+    public static func get(path: String, expiresIn: TimeInterval = 0) -> Single<Resource> {
+        return self.get(path: path, parameters: nil, expiresIn: expiresIn)
     }
     
-    public static func get(path: String, parameters: [String:String]?, cacheResponse: Bool = true) -> Single<Resource> {
+    public static func get(path: String, parameters: [String:String]?, expiresIn: TimeInterval = 0) -> Single<Resource> {
         
         let key = self.cacheKeyForRequest(path: path, parameters: parameters, data: nil)
         
-        if cacheResponse {
+        if expiresIn > 0 {
             let value = self.cache.get(key)
             
             if let resource = value {
@@ -93,19 +93,19 @@ public class Session {
         
         return self.adapter.get(path: path, parameters: parameters)
             .map { resource in
-                if cacheResponse {
-                    self.cache.set(key: key, value: resource)
+                if expiresIn > 0 {
+                    self.cache.set(key: key, value: resource, expiresAt: Date(timeInterval: expiresIn, since: Date()))
                 }
                 return resource
         }
     }
     
-    public static func post<T: Codable>(path: String, parameters: [String:String]?, object: T, cacheResponse: Bool = false) -> Single<Resource> {
+    public static func post<T: Codable>(path: String, parameters: [String:String]?, object: T, expiresIn: TimeInterval = 0) -> Single<Resource> {
         let requestBody = Resource.fromCodable(object).data
         
         let key = self.cacheKeyForRequest(path: path, parameters: parameters, data: requestBody)
         
-        if cacheResponse {
+        if expiresIn > 0 {
             let value = self.cache.get(key)
             
             if let resource = value {
@@ -115,19 +115,19 @@ public class Session {
         
         return self.adapter.post(path: path, parameters: parameters, data: requestBody)
             .map { resource in
-                if cacheResponse {
-                    self.cache.set(key: key, value: resource)
+                if expiresIn > 0 {
+                    self.cache.set(key: key, value: resource, expiresAt: Date(timeInterval: expiresIn, since: Date()))
                 }
                 return resource
         }
     }
     
-    public static func put<T: Codable>(path: String, parameters: [String:String]?, object: T, cacheResponse: Bool = false) -> Single<Resource> {
+    public static func put<T: Codable>(path: String, parameters: [String:String]?, object: T, expiresIn: TimeInterval = 0) -> Single<Resource> {
         let requestBody = Resource.fromCodable(object).data
 
         let key = self.cacheKeyForRequest(path: path, parameters: parameters, data: requestBody)
 
-        if cacheResponse {
+        if expiresIn > 0 {
             let value = self.cache.get(key)
             
             if let resource = value {
@@ -137,8 +137,8 @@ public class Session {
         
         return self.adapter.put(path: path, parameters: parameters, data: requestBody)
             .map {resource in
-                if cacheResponse {
-                    self.cache.set(key: key, value: resource)
+                if expiresIn > 0 {
+                    self.cache.set(key: key, value: resource, expiresAt: Date(timeInterval: expiresIn, since: Date()))
                 }
                 return resource
         }
