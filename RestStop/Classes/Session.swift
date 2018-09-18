@@ -23,6 +23,17 @@ public class Session {
     }
     
     // MARK: Session
+    public static func clearCache() {
+        // clear all existing keys except those used for non-cache purposes
+        
+        let keys = Session.cache.allKeys()
+        
+        for key in keys {
+            if strlen(key) == 32 {
+                Session.cache.delete(key)
+            }
+        }
+    }
     
     public static func startSession(path: String, username: String, password: String) -> Single<Bool> {
         return self.adapter.authenticate(path: path, username: username, password: password)
