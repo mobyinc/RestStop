@@ -12,6 +12,8 @@ import RxSwift
 
 open class DefaultHttpClient : HttpClientProtocol {
     public var debug: Bool = true
+    public var startRequest: (() -> Void)?
+    public var endRequest: (() -> Void)?
 
     public init() { }
 
@@ -19,8 +21,9 @@ open class DefaultHttpClient : HttpClientProtocol {
         if self.debug { self.log(request: request) }
         
         return Single<HttpResponse>.create { observer in
+            self.startRequest?()
             let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            
+                self.endRequest?()
                 let httpResponse = (response as? HTTPURLResponse)
 
                 if self.debug {
