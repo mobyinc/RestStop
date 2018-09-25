@@ -14,15 +14,20 @@ open class DefaultHttpClient : HttpClientProtocol {
     public var debug: Bool = true
     public var startRequest: (() -> Void)?
     public var endRequest: (() -> Void)?
+    private var urlSession: URLSession
 
-    public init() { }
+    public init() {
+        let config = URLSession.shared.configuration
+        config.httpMaximumConnectionsPerHost = 4
+        self.urlSession = URLSession(configuration: config)
+    }
 
     public func send(request: URLRequest) -> Single<HttpResponse> {
         if self.debug { self.log(request: request) }
         
         return Single<HttpResponse>.create { observer in
             self.startRequest?()
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            let task = self.urlSession.dataTask(with: request) { data, response, error in
                 self.endRequest?()
                 let httpResponse = (response as? HTTPURLResponse)
 
